@@ -32,6 +32,7 @@ let circle4Y = height -30 ;
 
 
 
+
 function animationY(){
 
 // Le cercle 1 descend le long de Y
@@ -59,20 +60,36 @@ ctx.arc(circle2X, circle2Y , 20, 0, 2 * Math.PI);
 ctx.fill(); // Remplissez le cercle
 ctx.closePath();
 
-// Cercle 3 en haut à gauche (30,30)
+    // On définit les limites de sortie des cercles pour ne pas sortir du canvas
 
+if (circle1Y > height -30|| circle1Y < 0) {
+    circle1Y = 30;
+}
+
+if (circle2Y > height -30 || circle2Y < 0) {
+    circle2Y =  height-30;
+}
 
 
 }
+addEventListener('mousemove',(e) =>{
+    circle1X = e.clientX;
+    circle1Y = e.clientY;
+    circle2X = e.clientX;
+    circle2Y = e.clientY;
+    e.preventDefault
 
-setInterval(animationY, 20);
+    setInterval(animationY, 30);
+});
+
+
 
 
 function animationX(){
 
 
     // Le cercle 3 part vers la droite le long de X     
-    circle3X ++;
+        circle3X ++;
     // Le cercle 3 part vers la gauche le long de X  
         circle4X --;
     
@@ -96,7 +113,26 @@ function animationX(){
     ctx.arc(circle4X, circle4Y, 20, 0, 2 * Math.PI); 
     ctx.fill(); 
     ctx.closePath();
+
+    // On définit les limites de sortie des cercles pour ne pas sortir du canvas
+
+    if (circle3X > width - 30 || circle3X < 0) {
+        circle3X = 30;
+    }
+    
+    if (circle4X > width - 30|| circle4X < 0) {
+        circle4X = width - 30;
+    }
     
     }
 
-    setInterval(animationX, 10);
+    addEventListener('mousemove',(e) =>{
+        circle3X = e.clientX;
+        circle3Y = e.clientY;
+        circle4X = e.clientX;
+        circle4Y = e.clientY;
+        e.preventDefault
+        setInterval(animationX, 30);
+    })
+    
+
