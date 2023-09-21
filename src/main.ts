@@ -11,6 +11,7 @@ ctx.fillStyle = "#000000";
 ctx.fillRect(0, 0, width, height);
 
 ctx.fillStyle = "#ff0000";
-ctx.arc(15, 15, 10, 0, Math.PI * 2);
+ctx.arc(30, 30, 30, 0, Math.PI * 2);
 ctx.fill();
+
 
