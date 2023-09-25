@@ -7,132 +7,166 @@ ctx.fillStyle = "#000000";
 const width = (canvas.width = window.innerWidth);
 const height = (canvas.height = window.innerHeight);
 
+
+
 canvas.style.background = "#000000";
 ctx.fillRect(0, 0, width, height);
 
-// variable pour le premier cercle
-let circle1X = width - 30;
-let circle1Y = 30;
+// création de variables globales
 
-// variable pour le deuxième cercle
-let circle2X = 30 ;
-let circle2Y = height -30 ;
+let positionX: number;
+let positionY: number;
 
+// création d'un tableau vide pour pouvoir stocker les différents cercles par la suite
 
-// variable pour le troisième cercle
-let circle3X = 30 ;
-let circle3Y =  30;
-
-// variable pour le quatrième cercle
-let circle4X = width - 30 ;
-let circle4Y = height -30 ;
-
-//On signale le début du chemin avec beginPath(), pour éviter les débordements du traits
+const arrayCircle: Circle[] = [];
 
 
+let audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
 
 
+// Création de l'oscillateur
+const oscillator = audioContext.createOscillator();
+oscillator.type = "square"; // Valeur possible (sine, square, triangle, sawtooth)
+oscillator.frequency.setValueAtTime(340, audioContext.currentTime);
 
-function animationY(){
+// Connexion de l'oscillateur à la destination audio
+oscillator.connect(audioContext.destination);
 
-// Le cercle 1 descend le long de Y
-    circle1Y ++;
- // Le cercle 2 remonte le long de Y   
-    circle2Y --;
+// Fonction pour démarrer la chute de fréquence
+function startChute() {
+    const currentTime = audioContext.currentTime;
+    oscillator.frequency.setValueAtTime(340, currentTime); // Définir la fréquence de départ
+
+    const dureeChute = 3.0; // Durée de la chute en secondes
+    const frequence = 0; // Fréquence à zéro pour ne plus rien entendre
 
 
- ctx.clearRect(0,0, width,height);
-
-
-
-ctx.fillStyle = "#ff0000";
-
-// Cercle 1 en haut à droite (width, 30)
-ctx.beginPath();
-ctx.arc(circle1X, circle1Y, 20, 0, 2 * Math.PI); //on utilise arc(corrdonnées X, Y et rayon, angle de départ, angle d'arrivée)
-ctx.fill(); // Remplissez le cercle
-ctx.closePath();
-
-// Cercle 2 en bas à gauche (30, heigth)
-ctx.fillStyle = "#ff0000";
-ctx.beginPath();
-ctx.arc(circle2X, circle2Y , 20, 0, 2 * Math.PI); 
-ctx.fill(); // Remplissez le cercle
-ctx.closePath();
-
-    // On définit les limites de sortie des cercles pour ne pas sortir du canvas
-
-if (circle1Y > height -30|| circle1Y < 0) {
-    circle1Y = 30;
-}
-
-if (circle2Y > height -30 || circle2Y < 0) {
-    circle2Y =  height-30;
+    // Définir la fréquence minimale à la fin de la chute
+    oscillator.frequency.linearRampToValueAtTime(frequence, currentTime + dureeChute);
 }
 
 
+// La création d'une class Circle permet d'avoir un "moule " pour que tous les cercles soient pareils
+export class Circle {
+    positionInitialeX: number;
+    positionInitialeY: number;
+    nouvellePositionX: number;
+    nouvellePositionY: number;
+    color: any;
+    radius: number;
+
+    //   Le constructeur est comme la "recette" qu'on doit suivre 
+    constructor(
+        positionInitialeX: number,
+        positionInitialeY: number,
+        nouvellePositionX: number,
+        nouvellePositionY: number
+    ) {
+        this.positionInitialeX = positionInitialeX;
+        this.positionInitialeY = positionInitialeY;
+        this.nouvellePositionX = nouvellePositionX;
+        this.nouvellePositionY = nouvellePositionY;
+        this.color = this.generateColor();
+        this.radius = this.generateRadius();
+    }
+
+    //   Méthode pour permettre de créer une couleur aléatoire des cercles
+    generateColor() {
+        return "#" + Math.random().toString(16).slice(2, 8);
+    }
+
+    //   Méthode pour permettre de créer un rayon aléatoire des cercles
+    generateRadius() {
+        return Math.floor(Math.random() * 100);
+    }
+
+    //   Méthode pour créer du mouvement (la position initiale devient la nouvelle position )
+    movement() {
+        this.positionInitialeX += this.nouvellePositionX;
+        this.positionInitialeY += this.nouvellePositionY;
+    }
+
+    //   Méthode pour créer un cercle - utilisation de l'API canvas
+    drawCircle(ctx: CanvasRenderingContext2D) {
+        
+        // for (let i = 0; i < 7; i++) {
+        ctx.beginPath();
+        ctx.fillStyle = this.color;
+        
+        ctx.arc(this.positionInitialeX, this.positionInitialeY, this.radius , 0, 2 * Math.PI);
+
+        ctx.fill();
+        ctx.closePath();
+        // }
+    }
 }
-addEventListener('mousemove',(e) =>{
-    circle1X = e.clientX;
-    circle1Y = e.clientY;
-    circle2X = e.clientX;
-    circle2Y = e.clientY;
-    e.preventDefault
 
-    setInterval(animationY, 30);
-});
+// Création d'une fonction pour générer un nouveau cercle
+function createNewCircle() {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * 10;
+
+    // ctx.globalAlpha = Math.random();
+    let nouvellePositionX = Math.cos(angle) * distance;
+    let nouvellePositionY = Math.sin(angle) * distance;
+
+    const circle = new Circle(
+        positionX,
+        positionY,
+        nouvellePositionX,
+        nouvellePositionY
+    );
+    //  Cela permet de stocker les cercles dans le tableau de cercles
+    arrayCircle.push(circle);
 
 
+    //  Cela permet d'écouter le clique de la souris et de récupérer la position de la souris
+    let soundActivated = false;
+
+    canvas.addEventListener("click", (e) => {
+        
+        e.preventDefault;
+        
+        positionX = e.clientX;
+        positionY = e.clientY;
+        createNewCircle();
+        // Si le son n'a pas encore été activé, activez-le
+        if (!soundActivated) {
+            startChute();
+            soundActivated = true;
+        }
+
+        oscillator.start(audioContext.currentTime);
+        startChute();
 
 
-function animationX(){
+    });
 
+}
 
-    // Le cercle 3 part vers la droite le long de X     
-        circle3X ++;
-    // Le cercle 3 part vers la gauche le long de X  
-        circle4X --;
-    
-    // ctx.clearRect(0,0, width,height);
-    
-    
-    
+// Boucle pour créer de nouveaux cercles
+for (let i = 0; i < 20; i++) {
+    createNewCircle();
+}
 
-    
-    // Cercle 3 en haut à gauche (30,30)
-    
-    ctx.fillStyle = "#ff0000";
-    ctx.beginPath();
-    ctx.arc(circle3X, circle3Y, 20, 0, 2 * Math.PI); 
-    ctx.fill(); // Remplissez le cercle
-    ctx.closePath();
-    
-    // Cercle 4 en bas à droite (width,height)
-    ctx.fillStyle = "#ff0000";
-    ctx.beginPath();
-    ctx.arc(circle4X, circle4Y, 20, 0, 2 * Math.PI); 
-    ctx.fill(); 
-    ctx.closePath();
+// Fonction pour mettre à jour et dessiner les cercles
+function updateAndDrawCircles() {
+    ctx.clearRect(0, 0, width, height); // Efface le canvas à chaque mise à jour
 
-    // On définit les limites de sortie des cercles pour ne pas sortir du canvas
-
-    if (circle3X > width - 30 || circle3X < 0) {
-        circle3X = 30;
+    for (const circle of arrayCircle) {
+        circle.movement();
+        circle.drawCircle(ctx);
     }
-    
-    if (circle4X > width - 30|| circle4X < 0) {
-        circle4X = width - 30;
-    }
-    
-    }
 
-    addEventListener('mousemove',(e) =>{
-        circle3X = e.clientX;
-        circle3Y = e.clientY;
-        circle4X = e.clientX;
-        circle4Y = e.clientY;
-        e.preventDefault
-        setInterval(animationX, 30);
-    })
-    
+
+
+    requestAnimationFrame(updateAndDrawCircles); // Appel récursif pour l'animation
+}
+
+updateAndDrawCircles(); // Démarrer l'animation
+
+
+
+
 
